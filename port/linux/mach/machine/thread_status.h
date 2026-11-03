@@ -1,0 +1,6 @@
+#ifndef CCTOOLS_COMPAT_MACH_MACHINE_THREAD_STATUS_H
+#define CCTOOLS_COMPAT_MACH_MACHINE_THREAD_STATUS_H
+
+#include <mach/i386/thread_status.h>
+
+#endif

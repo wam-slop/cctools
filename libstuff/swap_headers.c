@@ -913,9 +913,9 @@ check_dylib_command:
 		    nflavor = 0;
 		    p = (char *)ut + ut->cmdsize;
 		    while(state < p){
-			flavor = *((unsigned long *)state);
+			flavor = *((uint32_t *)state);
 			state += sizeof(unsigned long);
-			count = *((unsigned long *)state);
+			count = *((uint32_t *)state);
 			state += sizeof(unsigned long);
 			switch(flavor){
 			case ARM_THREAD_STATE:
@@ -1459,11 +1459,11 @@ check_dylib_command:
 		    arm_thread_state_t *cpu;
 
 		    while(state < p){
-			flavor = *((unsigned long *)state);
-			*((unsigned long *)state) = SWAP_INT(flavor);
+			flavor = *((uint32_t *)state);
+			*((uint32_t *)state) = SWAP_INT(flavor);
 			state += sizeof(unsigned long);
-			count = *((unsigned long *)state);
-			*((unsigned long *)state) = SWAP_INT(count);
+			count = *((uint32_t *)state);
+			*((uint32_t *)state) = SWAP_INT(count);
 			state += sizeof(unsigned long);
 			switch(flavor){
 			case ARM_THREAD_STATE:

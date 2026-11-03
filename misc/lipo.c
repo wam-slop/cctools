@@ -984,10 +984,10 @@ struct input_file *input)
 	/* see if this file is a fat file */
 	if(size >= sizeof(struct fat_header) &&
 #ifdef __BIG_ENDIAN__
-	   *((unsigned long *)addr) == FAT_MAGIC)
+	   *((uint32_t *)addr) == FAT_MAGIC)
 #endif /* __BIG_ENDIAN__ */
 #ifdef __LITTLE_ENDIAN__
-	   *((unsigned long *)addr) == SWAP_LONG(FAT_MAGIC))
+	   *((uint32_t *)addr) == SWAP_LONG(FAT_MAGIC))
 #endif /* __LITTLE_ENDIAN__ */
 	{
 
@@ -1063,8 +1063,8 @@ struct input_file *input)
 	}
 	/* see if this file is Mach-O file for 32-bit architectures */
 	else if(size >= sizeof(struct mach_header) &&
-	        (*((unsigned long *)addr) == MH_MAGIC ||
-	         *((unsigned long *)addr) == SWAP_LONG(MH_MAGIC))){
+	        (*((uint32_t *)addr) == MH_MAGIC ||
+	         *((uint32_t *)addr) == SWAP_LONG(MH_MAGIC))){
 
 	    /* this is a Mach-O file so create a thin file struct for it */
 	    thin = new_thin();
@@ -1095,8 +1095,8 @@ struct input_file *input)
 	}
 	/* see if this file is Mach-O file for 64-bit architectures */
 	else if(size >= sizeof(struct mach_header_64) &&
-	        (*((unsigned long *)addr) == MH_MAGIC_64 ||
-	         *((unsigned long *)addr) == SWAP_LONG(MH_MAGIC_64))){
+	        (*((uint32_t *)addr) == MH_MAGIC_64 ||
+	         *((uint32_t *)addr) == SWAP_LONG(MH_MAGIC_64))){
 
 	    /* this is a Mach-O file so create a thin file struct for it */
 	    thin = new_thin();
@@ -1216,15 +1216,15 @@ struct replace *replace)
 
 	/* see if this file is a fat file */
 	if(size >= sizeof(struct fat_header) &&
-	   *((unsigned long *)addr) == FAT_MAGIC){
+	   *((uint32_t *)addr) == FAT_MAGIC){
 
 	    fatal("replacement file: %s is a fat file (must be a thin file)",
 		  replace->thin_file.name);
 	}
 	/* see if this file is Mach-O file for 32-bit architectures */
 	else if(size >= sizeof(struct mach_header) &&
-	        (*((unsigned long *)addr) == MH_MAGIC ||
-	         *((unsigned long *)addr) == SWAP_LONG(MH_MAGIC))){
+	        (*((uint32_t *)addr) == MH_MAGIC ||
+	         *((uint32_t *)addr) == SWAP_LONG(MH_MAGIC))){
 
 	    /* this is a Mach-O file so fill in the thin file struct for it */
 	    replace->thin_file.addr = addr;
@@ -1248,8 +1248,8 @@ struct replace *replace)
 	}
 	/* see if this file is Mach-O file for 64-bit architectures */
 	else if(size >= sizeof(struct mach_header_64) &&
-	        (*((unsigned long *)addr) == MH_MAGIC_64 ||
-	         *((unsigned long *)addr) == SWAP_LONG(MH_MAGIC_64))){
+	        (*((uint32_t *)addr) == MH_MAGIC_64 ||
+	         *((uint32_t *)addr) == SWAP_LONG(MH_MAGIC_64))){
 
 	    /* this is a Mach-O file so fill in the thin file struct for it */
 	    replace->thin_file.addr = addr;
@@ -1318,7 +1318,8 @@ unsigned long size,
 cpu_type_t *cputype,
 cpu_subtype_t *cpusubtype)
 {
-    unsigned long offset, magic, i, ar_name_size;
+    unsigned long offset, i, ar_name_size;
+    uint32_t magic;
     struct mach_header mh;
     struct mach_header_64 mh64;
     struct ar_hdr *ar_hdr;
@@ -1351,9 +1352,9 @@ cpu_subtype_t *cpusubtype)
 		ar_name = ar_hdr->ar_name;
 		ar_name_size = 0;
 	    }
-	    if(size + ar_name_size - offset > sizeof(unsigned long)){
+	    if(size + ar_name_size - offset > sizeof(magic)){
 		memcpy(&magic, addr + offset + ar_name_size,
-		       sizeof(unsigned long));
+		       sizeof(magic));
 		if(magic == FAT_MAGIC)
 		    fatal("archive member %s(%.*s) is a fat file (not "
 			  "allowed in an archive)", name, (int)i, ar_name);

@@ -178,7 +178,8 @@ enum bool verbose)
 {
     enum byte_sex host_byte_sex;
     enum bool swapped, jbsr;
-    unsigned long opcode, base, disp;
+    uint32_t opcode;
+    unsigned long base, disp;
     long simm;
     unsigned long sect_offset;
     const char *indirect_symbol_name;
@@ -187,7 +188,7 @@ enum bool verbose)
 	swapped = host_byte_sex != object_byte_sex;
 	sect_offset = addr - sect_addr;
 
-	if(left < sizeof(unsigned long)){
+	if(left < sizeof(opcode)){
 	   if(left != 0){
 		memcpy(&opcode, sect, left);
 		if(swapped)
@@ -198,7 +199,7 @@ enum bool verbose)
 	   return(left);
 	}
 
-	memcpy(&opcode, sect, sizeof(unsigned long));
+	memcpy(&opcode, sect, sizeof(opcode));
 	if(swapped)
 	    opcode = SWAP_LONG(opcode);
 

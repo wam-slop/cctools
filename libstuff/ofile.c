@@ -4573,16 +4573,16 @@ check_dylib_command:
 		    nflavor = 0;
 		    p = (char *)ut + ut->cmdsize;
 		    while(state < p){
-			flavor = *((unsigned long *)state);
+			flavor = *((uint32_t *)state);
 			if(swapped){
 			    flavor = SWAP_INT(flavor);
-			    *((unsigned long *)state) = flavor;
+			    *((uint32_t *)state) = flavor;
 			}
 			state += sizeof(unsigned long);
-			count = *((unsigned long *)state);
+			count = *((uint32_t *)state);
 			if(swapped){
 			    count = SWAP_INT(count);
-			    *((unsigned long *)state) = count;
+			    *((uint32_t *)state) = count;
 			}
 			state += sizeof(unsigned long);
 			switch(flavor){

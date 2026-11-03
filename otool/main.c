@@ -694,7 +694,7 @@ void *cookie) /* cookie is not used */
 	    }
 	}
 	if(ofile->mh != NULL){
-	    if((intptr_t)(ofile->mh) % sizeof(unsigned long)){
+	    if((intptr_t)(ofile->mh) % sizeof(uint32_t)){
 		if(Xflag == FALSE)
 		    printf("(object file offset is not a multiple of sizeof("
 			   "unsigned long))");
@@ -710,7 +710,7 @@ void *cookie) /* cookie is not used */
 	    }
 	}
 	else if(ofile->mh64 != NULL){
-	    if((intptr_t)(ofile->mh64) % sizeof(unsigned long)){
+	    if((intptr_t)(ofile->mh64) % sizeof(uint32_t)){
 		if(Xflag == FALSE)
 		    printf("(object file offset is not a multiple of sizeof("
 			   "unsigned long))");
@@ -845,7 +845,7 @@ void *cookie) /* cookie is not used */
 		&symbols64, &nsymbols, &strings, &strings_size);
 
 	    if(symbols != NULL){
-		if((uintptr_t)symbols % sizeof(unsigned long) ||
+		if((uintptr_t)symbols % sizeof(uint32_t) ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    allocated_symbols =
 			allocate(nsymbols * sizeof(struct nlist));
@@ -857,7 +857,7 @@ void *cookie) /* cookie is not used */
 		    swap_nlist(symbols, nsymbols, get_host_byte_sex());
 	    }
 	    else{
-		if((uintptr_t)symbols64 % sizeof(unsigned long) ||
+		if((uintptr_t)symbols64 % sizeof(uint32_t) ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    allocated_symbols64 =
 			allocate(nsymbols * sizeof(struct nlist_64));
@@ -956,7 +956,7 @@ void *cookie) /* cookie is not used */
 	if(Tflag){
 	    get_toc_info(ofile->load_commands, mh_ncmds, mh_sizeofcmds,
 		ofile->object_byte_sex, addr, size, &tocs, &ntocs);
-	    if((int)tocs % sizeof(unsigned long) ||
+	    if((int)tocs % sizeof(uint32_t) ||
 	       ofile->object_byte_sex != get_host_byte_sex()){
 		allocated_tocs = allocate(ntocs *
 					sizeof(struct dylib_table_of_contents));
@@ -983,7 +983,7 @@ void *cookie) /* cookie is not used */
 	if(Rflag){
 	    get_ref_info(ofile->load_commands, mh_ncmds, mh_sizeofcmds,
 		ofile->object_byte_sex, addr, size, &refs, &nrefs);
-	    if((int)refs % sizeof(unsigned long) ||
+	    if((int)refs % sizeof(uint32_t) ||
 	       ofile->object_byte_sex != get_host_byte_sex()){
 		allocated_refs = allocate(nrefs *
 					sizeof(struct dylib_reference));
@@ -1001,7 +1001,7 @@ void *cookie) /* cookie is not used */
 	    get_indirect_symbol_table_info(ofile->load_commands, mh_ncmds,
 		mh_sizeofcmds, ofile->object_byte_sex, addr, size,
 		&indirect_symbols, &nindirect_symbols);
-	    if((int)indirect_symbols % sizeof(unsigned long) ||
+	    if((int)indirect_symbols % sizeof(uint32_t) ||
 	       ofile->object_byte_sex != get_host_byte_sex()){
 		allocated_indirect_symbols = allocate(nindirect_symbols *
 						     sizeof(uint32_t));
@@ -1016,7 +1016,7 @@ void *cookie) /* cookie is not used */
 	if(Hflag){
 	    get_hints_table_info(ofile->load_commands, mh_ncmds, mh_sizeofcmds,
 		ofile->object_byte_sex, addr, size, &hints, &nhints);
-	    if((int)hints % sizeof(unsigned long) ||
+	    if((int)hints % sizeof(uint32_t) ||
 	       ofile->object_byte_sex != get_host_byte_sex()){
 		allocated_hints = allocate(nhints *
 					   sizeof(struct twolevel_hint));
@@ -1057,7 +1057,7 @@ void *cookie) /* cookie is not used */
 	    relocs = NULL;
 	    nrelocs = 0;
 	    if(Vflag){
-		if((long)sect_relocs % sizeof(long) != 0 ||
+		if((long)sect_relocs % sizeof(uint32_t) != 0 ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    nrelocs = sect_nrelocs;
 		    relocs = allocate(nrelocs *
@@ -1273,7 +1273,7 @@ void *cookie) /* cookie is not used */
 		/* create aligned relocations entries as needed */
 		relocs = NULL;
 		nrelocs = 0;
-		if((long)ext_relocs % sizeof(long) != 0 ||
+		if((long)ext_relocs % sizeof(uint32_t) != 0 ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    relocs = allocate(next_relocs *
 				      sizeof(struct relocation_info));
@@ -1281,7 +1281,7 @@ void *cookie) /* cookie is not used */
 			   sizeof(struct relocation_info));
 		    ext_relocs = relocs;
 		}
-		if((long)loc_relocs % sizeof(long) != 0 ||
+		if((long)loc_relocs % sizeof(uint32_t) != 0 ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    relocs = allocate(nloc_relocs *
 				      sizeof(struct relocation_info));
@@ -1310,7 +1310,7 @@ void *cookie) /* cookie is not used */
 		/* create aligned relocations entries as needed */
 		relocs = NULL;
 		nrelocs = 0;
-		if((long)ext_relocs % sizeof(long) != 0 ||
+		if((long)ext_relocs % sizeof(uint32_t) != 0 ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    relocs = allocate(next_relocs *
 				      sizeof(struct relocation_info));
@@ -1318,7 +1318,7 @@ void *cookie) /* cookie is not used */
 			   sizeof(struct relocation_info));
 		    ext_relocs = relocs;
 		}
-		if((long)loc_relocs % sizeof(long) != 0 ||
+		if((long)loc_relocs % sizeof(uint32_t) != 0 ||
 		   ofile->object_byte_sex != get_host_byte_sex()){
 		    relocs = allocate(nloc_relocs *
 				      sizeof(struct relocation_info));
@@ -1412,7 +1412,7 @@ unsigned long *strings_size)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -1736,7 +1736,7 @@ struct dysymtab_command *dyst)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -1854,7 +1854,7 @@ struct twolevel_hints_command *hints_cmd)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -1994,7 +1994,7 @@ unsigned long *sect_flags)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >

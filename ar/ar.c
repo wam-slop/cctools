@@ -75,10 +75,14 @@ static char rcsid[] = "$OpenBSD: ar.c,v 1.3 1997/01/15 23:42:11 millert Exp $";
 #include <dirent.h>
 #include <err.h>
 #include <paths.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 #include "archive.h"
 #include "extern.h"
@@ -90,7 +94,28 @@ u_int options;
 char *archive, *envtmp, *posarg, *posname;
 static void badoptions __P((char *));
 static void usage __P((void));
+static char *sibling_ranlib __P((void));
 char *progname;
+
+/* the ranlib next to this ar with the same name prefix, not the first on PATH */
+static char *
+sibling_ranlib(void)
+{
+	static char path[MAXPATHLEN];
+	uint32_t size = sizeof(path);
+	size_t length;
+
+	if(_NSGetExecutablePath(path, &size) != 0)
+	    return("ranlib");
+	length = strlen(path);
+	if(length < 2 || strcmp(path + length - 2, "ar") != 0 ||
+	   length - 2 + sizeof("ranlib") > sizeof(path))
+	    return("ranlib");
+	strcpy(path + length - 2, "ranlib");
+	if(access(path, X_OK) != 0)
+	    return("ranlib");
+	return(path);
+}
 
 /*
  * main --
@@ -276,7 +301,7 @@ main(argc, argv)
 	if(run_ranlib){
 	    /* run ranlib -f or -q on the archive */
 	    reset_execute_list();
-	    add_execute_list("ranlib");
+	    add_execute_list(sibling_ranlib());
 	    if(options & AR_S)
 		add_execute_list("-f");
 	    else

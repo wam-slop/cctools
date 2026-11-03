@@ -2601,7 +2601,7 @@ enum byte_sex target_byte_sex)
     enum bool to_host_byte_sex, scattered;
 
     struct swapped_relocation_info {
-	long	r_address;
+	int32_t	r_address;
 	union {
 	    struct {
 		unsigned int
@@ -2617,7 +2617,7 @@ enum byte_sex target_byte_sex)
 
     struct swapped_scattered_relocation_info {
 	uint32_t word;
-	long	r_value;
+	int32_t	r_value;
     } *ssr;
 
 	host_byte_sex = get_host_byte_sex();

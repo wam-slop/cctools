@@ -1,0 +1,6 @@
+#ifndef CCTOOLS_COMPAT_MACH_MACHINE_BOOLEAN_H
+#define CCTOOLS_COMPAT_MACH_MACHINE_BOOLEAN_H
+
+#include <mach/boolean.h>
+
+#endif

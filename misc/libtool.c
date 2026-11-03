@@ -232,6 +232,7 @@ static void create_dynamic_shared_library_cleanup(
 static void make_table_of_contents(
     struct arch *arch,
     char *output);
+static char *ranlib_name_qsort_strings;
 static int ranlib_name_qsort(
     const struct ranlib *ran1,
     const struct ranlib *ran2);
@@ -336,7 +337,8 @@ char **envp)
 	    p++;
 	else
 	    p = argv[0];
-	if(strncmp(p, "ranlib", sizeof("ranlib") - 1) == 0)
+	if(strlen(p) >= sizeof("ranlib") - 1 &&
+	   strcmp(p + strlen(p) - (sizeof("ranlib") - 1), "ranlib") == 0)
 	    cmd_flags.ranlib = TRUE;
 
 	/* The default is to used long names */
@@ -2070,6 +2072,7 @@ create_library(
 char *output)
 {
     unsigned long i, j, k, l, library_size, offset, pad, *time_offsets;
+    uint32_t toc_field;
     enum byte_sex target_byte_sex;
     char *library, *p, *flush_start;
     kern_return_t r;
@@ -2297,11 +2300,11 @@ char *output)
 		      sizeof(struct ar_hdr));
 	    }
 
-	    l = arch->toc_nranlibs * sizeof(struct ranlib);
+	    toc_field = arch->toc_nranlibs * sizeof(struct ranlib);
 	    if(target_byte_sex != host_byte_sex)
-		l = SWAP_LONG(l);
-	    memcpy(p, (char *)&l, sizeof(long));
-	    p += sizeof(long);
+		toc_field = SWAP_INT(toc_field);
+	    memcpy(p, (char *)&toc_field, sizeof(toc_field));
+	    p += sizeof(toc_field);
 
 	    if(target_byte_sex != host_byte_sex)
 		swap_ranlib(arch->toc_ranlibs, arch->toc_nranlibs,
@@ -2310,11 +2313,11 @@ char *output)
 		   arch->toc_nranlibs * sizeof(struct ranlib));
 	    p += arch->toc_nranlibs * sizeof(struct ranlib);
 
-	    l = arch->toc_strsize;
+	    toc_field = arch->toc_strsize;
 	    if(target_byte_sex != host_byte_sex)
-		l = SWAP_LONG(l);
-	    memcpy(p, (char *)&l, sizeof(long));
-	    p += sizeof(long);
+		toc_field = SWAP_INT(toc_field);
+	    memcpy(p, (char *)&toc_field, sizeof(toc_field));
+	    p += sizeof(toc_field);
 
 	    memcpy(p, (char *)arch->toc_strings, arch->toc_strsize);
 	    p += arch->toc_strsize;
@@ -3287,8 +3290,7 @@ char *output)
 			if(is_toc_symbol == TRUE){
 			    strcpy(arch->toc_strings + s,
 				   strings + n_strx);
-			    arch->toc_ranlibs[r].ran_un.ran_name =
-							arch->toc_strings + s;
+			    arch->toc_ranlibs[r].ran_un.ran_strx = s;
 			    arch->toc_ranlibs[r].ran_off = i + 1;
 			    r++;
 			    s += strlen(strings + n_strx) + 1;
@@ -3311,8 +3313,7 @@ char *output)
 		    if(lto_toc_symbol(member->lto, j, cmd_flags.c) == TRUE){
 			strcpy(arch->toc_strings + s,
 			       lto_symbol_name(member->lto, j));
-			arch->toc_ranlibs[r].ran_un.ran_name =
-						    arch->toc_strings + s;
+			arch->toc_ranlibs[r].ran_un.ran_strx = s;
 			arch->toc_ranlibs[r].ran_off = i + 1;
 			r++;
 			s += strlen(lto_symbol_name(member->lto, j)) + 1;
@@ -3327,6 +3328,7 @@ char *output)
 	 * sort it and leave it sorted if no duplicates.
 	 */
 	if(cmd_flags.s == TRUE){
+	    ranlib_name_qsort_strings = arch->toc_strings;
 	    qsort(arch->toc_ranlibs, arch->toc_nranlibs, sizeof(struct ranlib),
 		  (int (*)(const void *, const void *))ranlib_name_qsort);
 	    sorted = check_sort_ranlibs(arch, output, FALSE);
@@ -3382,9 +3384,9 @@ char *output)
 	 *	the strings
 	 */
 	arch->toc_size = sizeof(struct ar_hdr) +
-			 sizeof(long) +
+			 sizeof(uint32_t) +
 			 arch->toc_nranlibs * sizeof(struct ranlib) +
-			 sizeof(long) +
+			 sizeof(uint32_t) +
 			 arch->toc_strsize;
 	/* add the size of the name is a long name is used */
 	if(arch->toc_long_name == TRUE)
@@ -3394,8 +3396,6 @@ char *output)
 	for(i = 0; i < arch->nmembers; i++)
 	    arch->members[i].offset += SARMAG + arch->toc_size;
 	for(i = 0; i < arch->toc_nranlibs; i++){
-	    arch->toc_ranlibs[i].ran_un.ran_strx =
-		arch->toc_ranlibs[i].ran_un.ran_name - arch->toc_strings;
 	    arch->toc_ranlibs[i].ran_off =
 		arch->members[arch->toc_ranlibs[i].ran_off - 1].offset;
 	}
@@ -3430,7 +3430,8 @@ ranlib_name_qsort(
 const struct ranlib *ran1,
 const struct ranlib *ran2)
 {
-	return(strcmp(ran1->ran_un.ran_name, ran2->ran_un.ran_name));
+	return(strcmp(ranlib_name_qsort_strings + ran1->ran_un.ran_strx,
+		      ranlib_name_qsort_strings + ran2->ran_un.ran_strx));
 }
 
 /*
@@ -3535,8 +3536,8 @@ enum bool library_warnings)
 	 */
 	multiple_defs = FALSE;
 	for(i = 0; i < arch->toc_nranlibs - 1; i++){
-	    if(strcmp(arch->toc_ranlibs[i].ran_un.ran_name,
-		      arch->toc_ranlibs[i+1].ran_un.ran_name) == 0){
+	    if(strcmp(arch->toc_strings + arch->toc_ranlibs[i].ran_un.ran_strx,
+		      arch->toc_strings + arch->toc_ranlibs[i+1].ran_un.ran_strx) == 0){
 		if(multiple_defs == FALSE){
 		    if(library_warnings == FALSE)
 			return(FALSE);
@@ -3552,14 +3553,16 @@ enum bool library_warnings)
 		if((int)(arch->toc_ranlibs[i].ran_off) > 0){
 		    member = arch->members + arch->toc_ranlibs[i].ran_off - 1;
 		    warn_member(arch, member, "defines symbol: %s",
-				arch->toc_ranlibs[i].ran_un.ran_name);
+				arch->toc_strings +
+				arch->toc_ranlibs[i].ran_un.ran_strx);
 		    arch->toc_ranlibs[i].ran_off =
 				-(arch->toc_ranlibs[i].ran_off);
 		}
 		if((int)(arch->toc_ranlibs[i+1].ran_off) > 0){
 		    member = arch->members + arch->toc_ranlibs[i+1].ran_off - 1;
 		    warn_member(arch, member, "defines symbol: %s",
-				arch->toc_ranlibs[i+1].ran_un.ran_name);
+				arch->toc_strings +
+				arch->toc_ranlibs[i+1].ran_un.ran_strx);
 		    arch->toc_ranlibs[i+1].ran_off =
 				-(arch->toc_ranlibs[i+1].ran_off);
 		}

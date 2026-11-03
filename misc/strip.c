@@ -2055,14 +2055,14 @@ enum byte_sex host_byte_sex)
 		     * entry so the item to be relocated is correct for a local
 		     * relocation entry. We don't need to do this for x86-64.
 		     */
-		    if(relocs[k].r_address + sizeof(long) > sectsize){
+		    if(relocs[k].r_address + sizeof(uint32_t) > sectsize){
 			fatal_arch(arch, member, "truncated or malformed "
 			    "object (r_address of relocation entry %lu of "
 			    "section (%.16s,%.16s) extends past the end "
 			    "of the section)", k, segname, sectname);
 		    }
 		    if(object->mh != NULL){
-			value = *(unsigned long *)
+			value = *(uint32_t *)
 				 (contents + relocs[k].r_address);
 			if(object->object_byte_sex != host_byte_sex)
 			    value = SWAP_LONG(value);
@@ -2083,7 +2083,7 @@ enum byte_sex host_byte_sex)
 			value += n_value;
 			if(object->object_byte_sex != host_byte_sex)
 			    value = SWAP_LONG(value);
-			*(unsigned long *)(contents + relocs[k].r_address) =
+			*(uint32_t *)(contents + relocs[k].r_address) =
 			    value;
 		    }
 		    else{
@@ -2371,7 +2371,7 @@ unsigned long nextrefsyms)
 	}
 
 	new_nsyms = 0;
-	new_strsize = sizeof(long);
+	new_strsize = sizeof(int32_t);
 	new_nlocalsym = 0;
 	new_nextdefsym = 0;
 	new_nundefsym = 0;
@@ -3019,18 +3019,18 @@ unsigned long nextrefsyms)
 	    new_symbols64 = (struct nlist_64 *)
 			  allocate(new_nsyms * sizeof(struct nlist_64));
 	}
-	new_strsize = round(new_strsize, sizeof(long));
+	new_strsize = round(new_strsize, sizeof(int32_t));
 	new_strings = (char *)allocate(new_strsize);
 	new_strings[new_strsize - 3] = '\0';
 	new_strings[new_strsize - 2] = '\0';
 	new_strings[new_strsize - 1] = '\0';
 
-	memset(new_strings, '\0', sizeof(long));
-	p = new_strings + sizeof(long);
+	memset(new_strings, '\0', sizeof(int32_t));
+	p = new_strings + sizeof(int32_t);
 	q = p + new_ext_strsize;
 
 	/* if all strings were stripped set the size to zero */
-	if(new_strsize == sizeof(long))
+	if(new_strsize == sizeof(int32_t))
 	    new_strsize = 0;
 
 	/*
@@ -4155,7 +4155,7 @@ unsigned long nextrefsyms)
 	new_nextdefsym = 0;
 	new_nundefsym = 0;
 
-	new_strsize = sizeof(long);
+	new_strsize = sizeof(int32_t);
 	new_ext_strsize = 0;
 
 	/*
@@ -4612,14 +4612,14 @@ change_symbol:
 	    new_symbols64 = (struct nlist_64 *)
 			    allocate(new_nsyms * sizeof(struct nlist_64));
 	}
-	new_strsize = round(new_strsize, sizeof(long));
+	new_strsize = round(new_strsize, sizeof(int32_t));
 	new_strings = (char *)allocate(new_strsize);
 	new_strings[new_strsize - 3] = '\0';
 	new_strings[new_strsize - 2] = '\0';
 	new_strings[new_strsize - 1] = '\0';
 
-	memset(new_strings, '\0', sizeof(long));
-	p = new_strings + sizeof(long);
+	memset(new_strings, '\0', sizeof(int32_t));
+	p = new_strings + sizeof(int32_t);
 	q = p + new_ext_strsize;
 
 	/*

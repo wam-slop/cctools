@@ -3271,7 +3271,7 @@ enum bool verbose)
 	    value0_size = sizeof(char);
 	    DISPLACEMENT(&symadd0, &symsub0, &value0, value0_size);
 	    printf("%s\t", mnemonic);
-	    print_operand(seg, symadd0, symsub0, value0, sizeof(long), "",
+	    print_operand(seg, symadd0, symsub0, value0, sizeof(int32_t), "",
 			  "\n");
 	    return(length);
 
@@ -3482,7 +3482,7 @@ const enum bool verbose)
 	    *value_size = dispsize32[r_m][mode];
 
 	if(s_i_b == TRUE && mode == 0 && base == EBP)
-	    *value_size = sizeof(long);
+	    *value_size = sizeof(int32_t);
 
 	if(*value_size != 0){
 	    sect_offset = addr + *length - sect_addr;

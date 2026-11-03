@@ -1087,7 +1087,7 @@ enum bool verbose)
 	       nranlibs);
 	if(verbose){
 	    printf("size of strings: %lu", str_size);
-	    if(str_size % sizeof(long) != 0)
+	    if(str_size % sizeof(uint32_t) != 0)
 		printf(" (not multiple of sizeof(long))\n");
 	    else
 		printf("\n");
@@ -1672,7 +1672,7 @@ enum bool very_verbose)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of sizeof(long)\n",
 		       i);
 	    if((char *)lc + l.cmdsize > (char *)load_commands + sizeofcmds)
@@ -2073,7 +2073,7 @@ enum bool verbose)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of sizeof(long)\n",
 		       i);
 	    if((char *)lc + l.cmdsize > (char *)load_commands + sizeofcmds)
@@ -2132,7 +2132,7 @@ enum bool verbose)
 			   dl.dylib.current_version & 0xff);
 		    if(verbose){
 			printf("\ttime stamp %u ", dl.dylib.timestamp);
-			printf("%s",ctime((const long *)&(dl.dylib.timestamp)));
+			{ time_t timestamp = dl.dylib.timestamp; printf("%s",ctime(&timestamp)); }
 		    }
 		}
 		else{
@@ -2675,6 +2675,7 @@ struct dylib_command *dl,
 struct load_command *lc)
 {
     char *p;
+    time_t timestamp;
 
 	if(dl->cmd == LC_ID_DYLIB)
 	    printf("          cmd LC_ID_DYLIB\n");
@@ -2703,7 +2704,8 @@ struct load_command *lc)
 		   dl->dylib.name.offset);
 	}
 	printf("   time stamp %u ", dl->dylib.timestamp);
-	printf("%s", ctime((const long *)&(dl->dylib.timestamp)));
+	timestamp = dl->dylib.timestamp;
+	printf("%s", ctime(&timestamp));
 	printf("      current version %u.%u.%u\n",
 	       dl->dylib.current_version >> 16,
 	       (dl->dylib.current_version >> 8) & 0xff,
@@ -5369,7 +5371,7 @@ enum bool verbose)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -6319,7 +6321,7 @@ enum bool verbose)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -6555,7 +6557,7 @@ enum bool verbose)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + l.cmdsize >
@@ -6889,7 +6891,8 @@ enum bool print_addresses)
 {
     enum byte_sex host_byte_sex;
     enum bool swapped, found;
-    unsigned long i, j, k, l, l0, l1, left, size;
+    unsigned long i, j, k, left, size;
+    uint32_t l, l0, l1;
     struct load_command lcmd, *lc;
     struct segment_command sg;
     struct section s;
@@ -6921,7 +6924,7 @@ enum bool print_addresses)
 	    memcpy((char *)&lcmd, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&lcmd, host_byte_sex);
-	    if(lcmd.cmdsize % sizeof(long) != 0)
+	    if(lcmd.cmdsize % sizeof(uint32_t) != 0)
 		printf("load command %lu size not a multiple of "
 		       "sizeof(long)\n", i);
 	    if((char *)lc + lcmd.cmdsize >
@@ -7063,11 +7066,11 @@ enum bool print_addresses)
 	}
 
 	/* loop through the literal pointer section and print the pointers */
-	for(i = 0; i < sect_size ; i += sizeof(long)){
+	for(i = 0; i < sect_size ; i += sizeof(uint32_t)){
 	    if(print_addresses == TRUE)
 		printf("%08x  ", (unsigned int)(sect_addr + i));
-	    l = (long)*((long *)(sect + i));
-	    memcpy((char *)&l, sect + i, sizeof(unsigned long));
+	    l = 0;
+	    memcpy((char *)&l, sect + i, sizeof(uint32_t));
 	    if(swapped)
 		l = SWAP_LONG(l);
 	    /*
@@ -7125,7 +7128,7 @@ enum bool print_addresses)
 			memcpy((char *)&l0,
 			       (char *)(literal_sections[j].contents +
 					l - literal_sections[j].addr),
-				sizeof(unsigned long));
+				sizeof(uint32_t));
 			if(swapped){
 			    d = SWAP_DOUBLE(d);
 			    l0 = SWAP_LONG(l0);
@@ -7140,12 +7143,12 @@ enum bool print_addresses)
 			memcpy((char *)&l0,
 			       (char *)(literal_sections[j].contents +
 					l - literal_sections[j].addr),
-				sizeof(unsigned long));
+				sizeof(uint32_t));
 			memcpy((char *)&l1,
 			       (char *)(literal_sections[j].contents +
 					l - literal_sections[j].addr +
-					sizeof(unsigned long)),
-			       sizeof(unsigned long));
+					sizeof(uint32_t)),
+			       sizeof(uint32_t));
 			if(swapped){
 			    d = SWAP_DOUBLE(d);
 			    l0 = SWAP_LONG(l0);
@@ -7513,7 +7516,7 @@ const unsigned long strings_size)
 	    memcpy((char *)&l, (char *)lc, sizeof(struct load_command));
 	    if(swapped)
 		swap_load_command(&l, host_byte_sex);
-	    if(l.cmdsize % sizeof(long) != 0)
+	    if(l.cmdsize % sizeof(uint32_t) != 0)
 		return(NULL);
 	    if((char *)lc + l.cmdsize > (char *)load_commands + sizeofcmds)
 		return(NULL);
