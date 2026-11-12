@@ -9,6 +9,18 @@ target_include_directories(cctools_options INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 target_compile_options(cctools_options INTERFACE -w)
+
+set(LLVM_SOURCE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/../llvm-project/llvm/include"
+    CACHE PATH "llvm/include in the LLVM source tree, for llvm-c/lto.h")
+if(NOT EXISTS "${LLVM_SOURCE_INCLUDE}/llvm-c/lto.h")
+  message(FATAL_ERROR "LLVM_SOURCE_INCLUDE (${LLVM_SOURCE_INCLUDE}) has no llvm-c/lto.h")
+endif()
+# lto.h only wants llvm-config.h for export macros, and we reach libLTO through dlsym
+set(llvm_config_stub "${CMAKE_CURRENT_BINARY_DIR}/llvm-config-stub")
+file(WRITE "${llvm_config_stub}/llvm/Config/llvm-config.h" "")
+target_include_directories(cctools_options INTERFACE "${LLVM_SOURCE_INCLUDE}" "${llvm_config_stub}")
+target_compile_definitions(cctools_options INTERFACE LTO_SUPPORT=1)
+
 if(NOT APPLE)
   target_include_directories(cctools_options BEFORE INTERFACE "${port}/linux")
   target_compile_options(cctools_options INTERFACE
@@ -35,7 +47,7 @@ if(NOT APPLE)
 endif()
 
 add_library(stuff STATIC ${libstuff_sources})
-target_link_libraries(stuff PUBLIC cctools_platform)
+target_link_libraries(stuff PUBLIC cctools_platform ${CMAKE_DL_LIBS})
 
 function(cctools_tool name)
   cmake_parse_arguments(tool "NO_LIBSTUFF" "" "SOURCES;DEFINES" ${ARGN})

@@ -9,7 +9,9 @@
 #include "stuff/ofile.h"
 #include "stuff/lto.h"
 #include "stuff/allocate.h"
+#ifdef __APPLE__
 #include <mach-o/dyld.h>
+#endif
 
 static int set_lto_cputype(
     struct ofile *ofile,
@@ -37,7 +39,7 @@ struct ofile *ofile,
 char *addr,
 unsigned long size)
 {
-   unsigned long bufsize;
+   uint32_t bufsize;
    char *p, *prefix, *lto_path, buf[MAXPATHLEN], resolved_name[PATH_MAX];
    int i;
 
@@ -80,7 +82,11 @@ unsigned long size)
 	    p = rindex(prefix, '/');
 	    if(p != NULL)
 		p[1] = '\0';
+#ifdef __APPLE__
 	    lto_path = makestr(prefix, "../lib/libLTO.dylib", NULL);
+#else
+	    lto_path = makestr(prefix, "../lib/libLTO.so", NULL);
+#endif
 
 	    lto_handle = dlopen(lto_path, RTLD_NOW);
 	    if(lto_handle == NULL){
@@ -154,7 +160,8 @@ char *target_triple)
 	if(p == NULL)
 	    return(0);
 	n = p - target_triple;
-	if(strncmp(target_triple, "i686", n) == 0){
+	if(strncmp(target_triple, "i686", n) == 0 ||
+	   strncmp(target_triple, "i386", n) == 0){
 	    ofile->lto_cputype = CPU_TYPE_I386;
 	    ofile->lto_cpusubtype = CPU_SUBTYPE_I386_ALL;
 	}
