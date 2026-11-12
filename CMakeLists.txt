@@ -9,6 +9,13 @@ target_include_directories(cctools_options INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 target_compile_options(cctools_options INTERFACE -w)
+if(APPLE)
+  target_include_directories(cctools_options INTERFACE "${port}/darwin")
+  target_compile_options(cctools_options INTERFACE
+    -include "${port}/darwin/cctools-compat.h"
+    -fcommon)
+  target_compile_definitions(cctools_options INTERFACE DYLD_BOOL=bool)
+endif()
 
 set(LLVM_SOURCE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/../llvm-project/llvm/include"
     CACHE PATH "llvm/include in the LLVM source tree, for llvm-c/lto.h")
@@ -44,6 +51,9 @@ add_library(cctools_platform STATIC "${port}/common/vers.c")
 target_link_libraries(cctools_platform PUBLIC cctools_options)
 if(NOT APPLE)
   target_sources(cctools_platform PRIVATE "${port}/linux/cctools-compat.c")
+endif()
+if(NOT APPLE OR CMAKE_SIZEOF_VOID_P EQUAL 8)
+  target_sources(cctools_platform PRIVATE "${port}/common/map_fd.c")
 endif()
 
 add_library(stuff STATIC ${libstuff_sources})
@@ -84,11 +94,16 @@ cctools_tool(strings SOURCES ${misc}/strings.c)
 set(otool_sources main.c ofile_print.c m68k_disasm.c i860_disasm.c m88k_disasm.c
                   i386_disasm.c ppc_disasm.c hppa_disasm.c sparc_disasm.c
                   arm_disasm.c print_objc2_64bit.c print_objc2_32bit.c)
-if(APPLE)
+set(host_has_objc1_runtime FALSE)
+if(APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(host_has_objc1_runtime TRUE)
+endif()
+if(host_has_objc1_runtime)
   list(APPEND otool_sources print_objc.c)
+  set_source_files_properties(otool/print_objc.c PROPERTIES COMPILE_OPTIONS -ObjC)
 endif()
 list(TRANSFORM otool_sources PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/otool/")
-if(NOT APPLE)
+if(NOT host_has_objc1_runtime)
   list(APPEND otool_sources "${port}/linux/otool_objc1_stub.c")
 endif()
 add_library(otool_ofile OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/libstuff/ofile.c")
